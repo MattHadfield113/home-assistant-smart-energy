@@ -43,7 +43,7 @@ def get_devices():
         return jsonify({'success': True, 'devices': devices})
     except Exception as e:
         logger.error(f"Error getting devices: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to retrieve devices'}), 500
 
 
 @app.route('/api/devices/managed')
@@ -54,7 +54,7 @@ def get_managed_devices():
         return jsonify({'success': True, 'devices': devices})
     except Exception as e:
         logger.error(f"Error getting managed devices: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to retrieve managed devices'}), 500
 
 
 @app.route('/api/devices/managed', methods=['POST'])
@@ -70,7 +70,7 @@ def add_managed_device():
         return jsonify({'success': True})
     except Exception as e:
         logger.error(f"Error adding device: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to add device'}), 500
 
 
 @app.route('/api/devices/managed/<entity_id>', methods=['DELETE'])
@@ -81,7 +81,7 @@ def remove_managed_device(entity_id):
         return jsonify({'success': True})
     except Exception as e:
         logger.error(f"Error removing device: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to remove device'}), 500
 
 
 @app.route('/api/energy/status')
@@ -92,7 +92,7 @@ def get_energy_status():
         return jsonify({'success': True, 'status': status})
     except Exception as e:
         logger.error(f"Error getting energy status: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to retrieve energy status'}), 500
 
 
 @app.route('/api/heating/comparison')
@@ -103,7 +103,7 @@ def get_heating_comparison():
         return jsonify({'success': True, 'comparison': comparison})
     except Exception as e:
         logger.error(f"Error calculating heating comparison: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to calculate heating comparison'}), 500
 
 
 @app.route('/api/automation/status')
@@ -114,7 +114,7 @@ def get_automation_status():
         return jsonify({'success': True, 'status': status})
     except Exception as e:
         logger.error(f"Error getting automation status: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to retrieve automation status'}), 500
 
 
 @app.route('/api/automation/toggle', methods=['POST'])
@@ -127,7 +127,7 @@ def toggle_automation():
         return jsonify({'success': True, 'enabled': enabled})
     except Exception as e:
         logger.error(f"Error toggling automation: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to toggle automation'}), 500
 
 
 @app.route('/api/config')
@@ -138,7 +138,7 @@ def get_config():
         return jsonify({'success': True, 'config': config})
     except Exception as e:
         logger.error(f"Error getting config: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to retrieve configuration'}), 500
 
 
 def automation_loop_sync():
