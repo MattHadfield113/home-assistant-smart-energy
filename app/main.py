@@ -4,6 +4,7 @@ import json
 import asyncio
 import logging
 import threading
+import time
 from flask import Flask, render_template, jsonify, request
 from energy_manager import EnergyManager
 from ha_client import HomeAssistantClient
@@ -151,7 +152,6 @@ def automation_loop_sync():
                 loop.run_until_complete(energy_manager.update_and_control())
         except Exception as e:
             logger.error(f"Error in automation loop: {e}")
-        import time
         time.sleep(30)  # Run every 30 seconds
 
 
