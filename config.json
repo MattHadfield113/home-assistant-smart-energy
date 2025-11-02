@@ -1,0 +1,43 @@
+{
+  "name": "Smart Energy Controller",
+  "version": "1.0.0",
+  "slug": "smart_energy_controller",
+  "description": "Intelligent energy management for Home Assistant with solar, pricing, and heat pump optimization",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "startup": "application",
+  "boot": "auto",
+  "ports": {
+    "8099": 8099
+  },
+  "ports_description": {
+    "8099": "Web interface"
+  },
+  "webui": "http://[HOST]:[PORT:8099]",
+  "options": {
+    "solar_sensor": "",
+    "electricity_cost_sensor": "",
+    "gas_cost_sensor": "",
+    "free_session_sensors": [],
+    "saving_session_sensors": [],
+    "cop_coefficient": 3.5,
+    "eer_coefficient": 12.0,
+    "automation_enabled": true
+  },
+  "schema": {
+    "solar_sensor": "str?",
+    "electricity_cost_sensor": "str?",
+    "gas_cost_sensor": "str?",
+    "free_session_sensors": ["str?"],
+    "saving_session_sensors": ["str?"],
+    "cop_coefficient": "float?",
+    "eer_coefficient": "float?",
+    "automation_enabled": "bool"
+  },
+  "hassio_api": true,
+  "hassio_role": "default",
+  "homeassistant_api": true,
+  "ingress": true,
+  "ingress_port": 8099,
+  "panel_icon": "mdi:lightning-bolt",
+  "panel_title": "Smart Energy"
+}
