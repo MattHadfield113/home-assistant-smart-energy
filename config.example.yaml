@@ -1,0 +1,33 @@
+# Example configuration for Smart Energy Controller
+
+# Solar sensor (reports current solar generation in Watts)
+solar_sensor: sensor.solar_power
+
+# Electricity cost sensor (reports cost per kWh)
+electricity_cost_sensor: sensor.electricity_price
+
+# Gas cost sensor (reports cost per kWh)
+gas_cost_sensor: sensor.gas_price
+
+# Binary sensors that indicate free electricity sessions
+# These should be "on" or "true" when a free session is active
+free_session_sensors:
+  - binary_sensor.octopus_free_session
+  - binary_sensor.agile_free_period
+
+# Binary sensors that indicate saving sessions (demand response)
+# These should be "on" or "true" when devices should be turned off
+saving_session_sensors:
+  - binary_sensor.octopus_saving_session
+  - binary_sensor.grid_demand_high
+
+# Coefficient of Performance for your heat pump
+# Typical values: 2.5-4.5 (higher is more efficient)
+cop_coefficient: 3.5
+
+# Energy Efficiency Ratio for cooling systems
+# Typical values: 8-15 BTU/Wh (higher is more efficient)
+eer_coefficient: 12.0
+
+# Enable automation on startup
+automation_enabled: true
