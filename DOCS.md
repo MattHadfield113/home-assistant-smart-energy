@@ -45,6 +45,8 @@ Intelligent energy management for Home Assistant with solar, pricing, and heat p
 solar_sensor: sensor.solar_power
 electricity_cost_sensor: sensor.electricity_price
 gas_cost_sensor: sensor.gas_price
+solar_forecast_sensor: sensor.solar_forecast
+electricity_forecast_sensor: sensor.electricity_forecast
 free_session_sensors:
   - binary_sensor.octopus_free_session
 saving_session_sensors:
@@ -52,6 +54,11 @@ saving_session_sensors:
 cop_coefficient: 3.5
 eer_coefficient: 12.0
 automation_enabled: true
+heating_min_change_interval: 900
+publish_ha_entities: true
+allow_direct_device_control: true
+enable_solar_forecast_optimization: true
+enable_cost_forecast_optimization: true
 ```
 
 ### Configuration Options
@@ -61,11 +68,18 @@ automation_enabled: true
 | `solar_sensor` | No | Entity ID of your solar generation sensor (in Watts) | "" |
 | `electricity_cost_sensor` | No | Entity ID of your electricity cost sensor (per kWh) | "" |
 | `gas_cost_sensor` | No | Entity ID of your gas cost sensor (per kWh) | "" |
+| `solar_forecast_sensor` | No | Entity ID of solar forecast sensor (with forecast attribute) | "" |
+| `electricity_forecast_sensor` | No | Entity ID of cost forecast sensor (with forecast attribute) | "" |
 | `free_session_sensors` | No | List of sensors indicating free electricity sessions | [] |
 | `saving_session_sensors` | No | List of sensors indicating saving sessions | [] |
 | `cop_coefficient` | No | Coefficient of Performance for your heat pump | 3.5 |
 | `eer_coefficient` | No | Energy Efficiency Ratio for cooling | 12.0 |
 | `automation_enabled` | No | Enable automation on startup | true |
+| `heating_min_change_interval` | No | Minimum seconds between heating changes (300-3600) | 900 |
+| `publish_ha_entities` | No | Publish automation decisions as HA entities | true |
+| `allow_direct_device_control` | No | Global setting to allow device control | true |
+| `enable_solar_forecast_optimization` | No | Enable solar forecast features | false |
+| `enable_cost_forecast_optimization` | No | Enable cost forecast features | false |
 
 ## How It Works
 
@@ -126,6 +140,71 @@ Toggle automation on/off from the "Automation" tab. When enabled:
 - Devices are controlled automatically every 30 seconds
 - Device states are logged
 - Energy decisions are made based on current conditions
+- Automation decisions published to Home Assistant (if enabled)
+
+## New Features in v1.1.0
+
+### Device Scheduling
+
+Configure time windows when devices should NOT be controlled:
+
+```json
+{
+  "entity_id": "switch.dishwasher",
+  "schedule": {
+    "start": "08:00",
+    "end": "22:00",
+    "days": [0, 1, 2, 3, 4]  // Monday-Friday
+  },
+  "allow_direct_control": true,
+  "required_run_duration": 120,  // Minutes
+  "auto_start_automation": "automation.start_dishwasher"
+}
+```
+
+### Solar Forecast Optimization
+
+When `enable_solar_forecast_optimization` is enabled and `solar_forecast_sensor` is configured:
+- System analyzes forecast data to find optimal time slots
+- Considers device `required_run_duration`
+- Returns top 10 slots with highest solar generation
+- Accessible via `/api/devices/schedule/{entity_id}`
+
+### Cost Forecast Optimization
+
+When `enable_cost_forecast_optimization` is enabled and `electricity_forecast_sensor` is configured:
+- System calculates cheapest time slots
+- Factors in device run duration
+- Returns top 10 most cost-effective slots
+- Helps schedule energy-intensive devices
+
+### Heating Control
+
+Minimum interval between heating system changes:
+- Configurable via `heating_min_change_interval` (300-3600 seconds)
+- Prevents frequent cycling of heating systems
+- Automatically detects heating devices (name contains 'heat' or 'thermostat')
+- Tracks last change per device
+
+### Home Assistant Integration
+
+When `publish_ha_entities` is enabled:
+- Control decisions published as `sensor.sec_{device}_decision`
+- Device configs published as `sensor.sec_{device}_config`
+- Includes timestamp, reason, and action details
+- View automation activity directly in HA
+
+### Auto-Start Triggers
+
+Trigger Home Assistant automations/scripts when conditions are favorable:
+```yaml
+# In device config
+auto_start_automation: automation.start_washing_machine
+# or
+auto_start_automation: script.dishwasher_start
+```
+
+When device is turned on due to excess solar or cheap rates, the configured automation/script is triggered with context variables.
 
 ## API Endpoints
 
@@ -141,12 +220,39 @@ Add a device to energy management
 {
   "entity_id": "switch.washing_machine",
   "priority": 5,
-  "power_consumption": 2000
+  "power_consumption": 2000,
+  "schedule": {
+    "start": "08:00",
+    "end": "22:00",
+    "days": [0,1,2,3,4]
+  },
+  "allow_direct_control": true,
+  "required_run_duration": 90,
+  "auto_start_automation": "automation.start_washing"
+}
+```
+
+### PUT /api/devices/managed/{entity_id}
+Update device configuration (new in v1.1.0)
+```json
+{
+  "priority": 7,
+  "schedule": {...},
+  "allow_direct_control": false
 }
 ```
 
 ### DELETE /api/devices/managed/{entity_id}
 Remove a device from energy management
+
+### GET /api/devices/schedule/{entity_id}
+Get optimal schedule for device based on forecasts (new in v1.1.0)
+
+### GET /api/forecast/solar
+Get solar generation forecast data (new in v1.1.0)
+
+### GET /api/forecast/cost
+Get energy cost forecast data (new in v1.1.0)
 
 ### GET /api/energy/status
 Get current energy status
