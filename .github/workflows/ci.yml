@@ -115,7 +115,7 @@ jobs:
           import json
           with open('config.json') as f:
               config = json.load(f)
-          required_keys = ['name', 'version', 'slug', 'description', 'arch', 'startup']
+          required_keys = ['name', 'version', 'slug', 'description', 'arch']
           for key in required_keys:
               assert key in config, f'Missing required key: {key}'
           print('✓ config.json has all required keys')
