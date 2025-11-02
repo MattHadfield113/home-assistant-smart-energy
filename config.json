@@ -4,15 +4,12 @@
   "slug": "smart_energy_controller",
   "description": "Intelligent energy management for Home Assistant with solar, pricing, heat pump optimization, and battery storage",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
-  "startup": "application",
-  "boot": "auto",
   "ports": {
     "8099": 8099
   },
   "ports_description": {
     "8099": "Web interface"
   },
-  "webui": "http://[HOST]:[PORT:8099]",
   "options": {
     "solar_sensor": "",
     "electricity_cost_sensor": "",
@@ -56,10 +53,8 @@
     "enable_battery_management": "bool"
   },
   "hassio_api": true,
-  "hassio_role": "default",
   "homeassistant_api": true,
   "ingress": true,
-  "ingress_port": 8099,
   "panel_icon": "mdi:lightning-bolt",
   "panel_title": "Smart Energy"
 }
