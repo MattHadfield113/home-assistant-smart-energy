@@ -3,6 +3,7 @@ import os
 import json
 import asyncio
 import logging
+import threading
 from flask import Flask, render_template, jsonify, request
 from energy_manager import EnergyManager
 from ha_client import HomeAssistantClient
@@ -15,6 +16,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 # Initialize components
 ha_client = None
 energy_manager = None
+automation_task = None
 
 
 def load_config():
@@ -138,23 +140,29 @@ def get_config():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-async def automation_loop():
-    """Main automation loop."""
+def automation_loop_sync():
+    """Main automation loop (synchronous wrapper)."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     while True:
         try:
-            if energy_manager.is_automation_enabled():
-                await energy_manager.update_and_control()
+            if energy_manager and energy_manager.is_automation_enabled():
+                loop.run_until_complete(energy_manager.update_and_control())
         except Exception as e:
             logger.error(f"Error in automation loop: {e}")
-        await asyncio.sleep(30)  # Run every 30 seconds
+        import time
+        time.sleep(30)  # Run every 30 seconds
 
 
-def run_flask():
-    """Run Flask app."""
-    app.run(host='0.0.0.0', port=8099, debug=False)
+def run_automation_background():
+    """Run automation loop in background thread."""
+    automation_thread = threading.Thread(target=automation_loop_sync, daemon=True)
+    automation_thread.start()
+    logger.info("Automation loop started in background")
 
 
-async def main():
+def main():
     """Main entry point."""
     global ha_client, energy_manager
     
@@ -172,12 +180,12 @@ async def main():
     energy_manager = EnergyManager(ha_client, config)
     
     # Start automation loop in background
-    asyncio.create_task(automation_loop())
+    run_automation_background()
     
     # Run Flask app
     logger.info("Starting web server on port 8099...")
-    run_flask()
+    app.run(host='0.0.0.0', port=8099, debug=False)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()

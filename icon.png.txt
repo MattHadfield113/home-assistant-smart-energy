@@ -1,3 +1,0 @@
-# Smart Energy Controller Logo/Icon
-# This is a placeholder - in production, you would use an actual PNG image
-# For now, we document that an icon.png should be added here
