@@ -2,11 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Intelligent energy management for Home Assistant with solar, pricing, and heat pump optimization.
+Intelligent energy management for Home Assistant with solar, pricing, heat pump optimization, and battery storage.
 
 ## Overview
 
-The Smart Energy Controller is a comprehensive Home Assistant add-on that provides intelligent automation for your home's energy consumption. It automatically controls devices based on solar generation, electricity pricing, free electric sessions, and saving sessions. Additionally, it provides cost comparison between heat pump and gas heating systems.
+The Smart Energy Controller is a comprehensive Home Assistant add-on that provides intelligent automation for your home's energy consumption. It automatically controls devices based on solar generation, electricity pricing, free electric sessions, and saving sessions. Additionally, it provides cost comparison between heat pump and gas heating systems, and can integrate with battery storage for optimized energy management.
 
 ## Key Features
 
@@ -16,12 +16,20 @@ The Smart Energy Controller is a comprehensive Home Assistant add-on that provid
 - 🎁 **Free Session Support**: Enable all devices during free electricity periods
 - 💾 **Saving Sessions**: Turn off non-essential devices during demand response events
 - 🔥 **Heating Comparison**: Compare heat pump vs. gas heating costs with COP/EER calculations
+- 🔋 **Battery Integration**: Monitor and optimize around battery storage systems
 - 📊 **Web Dashboard**: Beautiful, responsive interface for monitoring and control
 - 🤖 **Intelligent Automation**: Priority-based device control system
 - 📅 **Smart Scheduling**: Device schedules with time windows and day restrictions
 - 🔮 **Forecast Optimization**: Solar and cost forecast integration for optimal timing
-- 🏡 **HA Integration**: Publishes automation decisions as Home Assistant entities
+- 🏡 **HA Integration**: Publishes automation decisions and system sensors to Home Assistant
 - ⚡ **Auto-Start Triggers**: Launch automations/scripts on favorable conditions
+
+## What's New in v1.2.0
+
+- **Battery Storage Support**: Integrate with home battery systems for smarter energy management
+- **System Sensor Publishing**: All key metrics published as Home Assistant sensors
+- **Battery-Aware Automation**: Smarter decisions when battery storage is available
+- **Enhanced Dashboard**: Battery status display when enabled
 
 ## What's New in v1.1.0
 

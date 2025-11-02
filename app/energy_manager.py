@@ -102,6 +102,30 @@ class EnergyManager:
             return self.ha_client.get_sensor_value(sensor)
         return 0.0
     
+    def get_battery_level(self):
+        """Get current battery level percentage."""
+        if not self.config.get('enable_battery_management', False):
+            return None
+        sensor = self.config.get('battery_level_sensor')
+        if sensor:
+            return self.ha_client.get_sensor_value(sensor)
+        return None
+    
+    def get_battery_power(self):
+        """Get current battery power (positive = charging, negative = discharging)."""
+        if not self.config.get('enable_battery_management', False):
+            return None
+        sensor = self.config.get('battery_power_sensor')
+        if sensor:
+            return self.ha_client.get_sensor_value(sensor)
+        return None
+    
+    def get_battery_capacity(self):
+        """Get battery capacity in kWh."""
+        if not self.config.get('enable_battery_management', False):
+            return None
+        return self.config.get('battery_capacity_kwh', 10.0)
+    
     def is_free_electric_session(self):
         """Check if currently in a free electric session."""
         sensors = self.config.get('free_session_sensors', [])
@@ -166,7 +190,7 @@ class EnergyManager:
     
     def get_status(self):
         """Get current energy status."""
-        return {
+        status = {
             'solar_generation': self.get_solar_generation(),
             'electricity_cost': self.get_electricity_cost(),
             'gas_cost': self.get_gas_cost(),
@@ -176,6 +200,99 @@ class EnergyManager:
             'managed_device_count': len(self.managed_devices),
             'timestamp': datetime.now().isoformat()
         }
+        
+        # Add battery info if enabled
+        if self.config.get('enable_battery_management', False):
+            battery_level = self.get_battery_level()
+            battery_power = self.get_battery_power()
+            if battery_level is not None:
+                status['battery_level'] = battery_level
+            if battery_power is not None:
+                status['battery_power'] = battery_power
+                status['battery_state'] = 'charging' if battery_power > 0 else 'discharging' if battery_power < 0 else 'idle'
+        
+        return status
+    
+    def publish_system_sensors(self):
+        """Publish system-wide sensors to Home Assistant."""
+        if not self.config.get('publish_ha_entities', True):
+            return
+        
+        try:
+            status = self.get_status()
+            
+            # Publish solar generation sensor
+            if status.get('solar_generation') is not None:
+                self.ha_client.set_state('sensor.sec_solar_generation', {
+                    'state': status['solar_generation'],
+                    'attributes': {
+                        'unit_of_measurement': 'W',
+                        'friendly_name': 'Smart Energy - Solar Generation',
+                        'device_class': 'power',
+                        'state_class': 'measurement'
+                    }
+                })
+            
+            # Publish electricity cost sensor
+            if status.get('electricity_cost') is not None:
+                self.ha_client.set_state('sensor.sec_electricity_cost', {
+                    'state': status['electricity_cost'],
+                    'attributes': {
+                        'unit_of_measurement': 'currency/kWh',
+                        'friendly_name': 'Smart Energy - Electricity Cost',
+                        'state_class': 'measurement'
+                    }
+                })
+            
+            # Publish gas cost sensor
+            if status.get('gas_cost') is not None:
+                self.ha_client.set_state('sensor.sec_gas_cost', {
+                    'state': status['gas_cost'],
+                    'attributes': {
+                        'unit_of_measurement': 'currency/kWh',
+                        'friendly_name': 'Smart Energy - Gas Cost',
+                        'state_class': 'measurement'
+                    }
+                })
+            
+            # Publish battery sensors if enabled
+            if self.config.get('enable_battery_management', False):
+                if status.get('battery_level') is not None:
+                    self.ha_client.set_state('sensor.sec_battery_level', {
+                        'state': status['battery_level'],
+                        'attributes': {
+                            'unit_of_measurement': '%',
+                            'friendly_name': 'Smart Energy - Battery Level',
+                            'device_class': 'battery',
+                            'state_class': 'measurement'
+                        }
+                    })
+                
+                if status.get('battery_power') is not None:
+                    self.ha_client.set_state('sensor.sec_battery_power', {
+                        'state': status['battery_power'],
+                        'attributes': {
+                            'unit_of_measurement': 'W',
+                            'friendly_name': 'Smart Energy - Battery Power',
+                            'device_class': 'power',
+                            'state_class': 'measurement',
+                            'battery_state': status.get('battery_state', 'unknown')
+                        }
+                    })
+            
+            # Publish automation status sensor
+            self.ha_client.set_state('sensor.sec_automation_status', {
+                'state': 'enabled' if status['automation_enabled'] else 'disabled',
+                'attributes': {
+                    'friendly_name': 'Smart Energy - Automation Status',
+                    'managed_device_count': status['managed_device_count'],
+                    'is_free_session': status['is_free_session'],
+                    'is_saving_session': status['is_saving_session']
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Error publishing system sensors: {e}")
     
     def get_automation_status(self):
         """Get automation status."""
@@ -199,6 +316,9 @@ class EnergyManager:
             return
         
         logger.info("Running automation update...")
+        
+        # Publish system sensors to Home Assistant
+        self.publish_system_sensors()
         
         # Get current conditions
         solar_generation = self.get_solar_generation()
@@ -265,8 +385,25 @@ class EnergyManager:
             key=lambda x: x[1]['priority']
         )
         
+        # Get battery status if enabled
+        battery_level = None
+        battery_power = None
+        if self.config.get('enable_battery_management', False):
+            battery_level = self.get_battery_level()
+            battery_power = self.get_battery_power()
+            if battery_level is not None and battery_power is not None:
+                logger.info(f"Battery: {battery_level}%, Power: {battery_power}W")
+        
         # High solar generation - turn on devices
-        if solar_generation > 1000:  # More than 1kW solar
+        # Consider battery: if battery charging and near full, prioritize device usage
+        should_enable_devices = solar_generation > 1000
+        if battery_level is not None and battery_power is not None:
+            # If battery is charging and above 80%, prioritize devices over battery
+            if battery_level > 80 and battery_power > 0:
+                should_enable_devices = solar_generation > 500  # Lower threshold
+                logger.info("Battery near full, lowering threshold for device activation")
+        
+        if should_enable_devices:
             logger.info("High solar generation - enabling devices")
             for entity_id, device_info in sorted_devices:
                 if device_info['enabled'] and self._can_control_device(entity_id, device_info):
@@ -277,7 +414,14 @@ class EnergyManager:
                         device_info['last_controlled'] = datetime.now().isoformat()
         
         # High electricity cost - turn off lower priority devices
-        elif electricity_cost > 0.30:  # Cost threshold
+        # Consider battery: if battery available and charged, be more aggressive
+        cost_threshold = 0.30
+        if battery_level is not None and battery_level > 50:
+            # Can be more aggressive with high costs if battery available
+            cost_threshold = 0.25
+            logger.info(f"Battery available ({battery_level}%), lowering cost threshold")
+        
+        if electricity_cost > cost_threshold:
             logger.info("High electricity cost - disabling lower priority devices")
             for entity_id, device_info in sorted_devices:
                 if device_info['enabled'] and device_info['priority'] > 5 and self._can_control_device(entity_id, device_info):

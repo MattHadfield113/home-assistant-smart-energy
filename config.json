@@ -1,8 +1,8 @@
 {
   "name": "Smart Energy Controller",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "slug": "smart_energy_controller",
-  "description": "Intelligent energy management for Home Assistant with solar, pricing, and heat pump optimization",
+  "description": "Intelligent energy management for Home Assistant with solar, pricing, heat pump optimization, and battery storage",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "startup": "application",
   "boot": "auto",
@@ -19,6 +19,9 @@
     "gas_cost_sensor": "",
     "solar_forecast_sensor": "",
     "electricity_forecast_sensor": "",
+    "battery_level_sensor": "",
+    "battery_power_sensor": "",
+    "battery_capacity_kwh": 10.0,
     "free_session_sensors": [],
     "saving_session_sensors": [],
     "cop_coefficient": 3.5,
@@ -28,7 +31,8 @@
     "publish_ha_entities": true,
     "allow_direct_device_control": true,
     "enable_solar_forecast_optimization": false,
-    "enable_cost_forecast_optimization": false
+    "enable_cost_forecast_optimization": false,
+    "enable_battery_management": false
   },
   "schema": {
     "solar_sensor": "str?",
@@ -36,6 +40,9 @@
     "gas_cost_sensor": "str?",
     "solar_forecast_sensor": "str?",
     "electricity_forecast_sensor": "str?",
+    "battery_level_sensor": "str?",
+    "battery_power_sensor": "str?",
+    "battery_capacity_kwh": "float?",
     "free_session_sensors": ["str?"],
     "saving_session_sensors": ["str?"],
     "cop_coefficient": "float?",
@@ -45,7 +52,8 @@
     "publish_ha_entities": "bool",
     "allow_direct_device_control": "bool",
     "enable_solar_forecast_optimization": "bool",
-    "enable_cost_forecast_optimization": "bool"
+    "enable_cost_forecast_optimization": "bool",
+    "enable_battery_management": "bool"
   },
   "hassio_api": true,
   "hassio_role": "default",

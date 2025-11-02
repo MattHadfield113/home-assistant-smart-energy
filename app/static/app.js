@@ -64,6 +64,19 @@ async function loadDashboard() {
         document.getElementById('free-session').textContent = status.is_free_session ? 'Active' : 'Inactive';
         document.getElementById('saving-session').textContent = status.is_saving_session ? 'Active' : 'Inactive';
         document.getElementById('managed-count').textContent = status.managed_device_count;
+        
+        // Show battery info if available
+        if (status.battery_level !== undefined) {
+            const batteryCard = document.getElementById('battery-card');
+            batteryCard.style.display = 'block';
+            document.getElementById('battery-level').textContent = status.battery_level.toFixed(0);
+            const batteryState = document.getElementById('battery-state');
+            if (status.battery_state) {
+                batteryState.textContent = `% (${status.battery_state})`;
+            } else {
+                batteryState.textContent = '%';
+            }
+        }
     }
 }
 

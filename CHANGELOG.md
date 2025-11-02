@@ -2,6 +2,44 @@
 
 All notable changes to the Smart Energy Controller add-on will be documented in this file.
 
+## [1.2.0] - 2024-11-04
+
+### Added
+- Battery storage integration (optional)
+  - Battery level sensor monitoring
+  - Battery power sensor (charging/discharging state)
+  - Battery capacity configuration
+  - Smart control considering battery state
+  - Battery status displayed in dashboard
+- System-wide sensor publishing to Home Assistant
+  - `sensor.sec_solar_generation` - Solar generation in Watts
+  - `sensor.sec_electricity_cost` - Current electricity cost
+  - `sensor.sec_gas_cost` - Current gas cost
+  - `sensor.sec_battery_level` - Battery level percentage (if enabled)
+  - `sensor.sec_battery_power` - Battery power (if enabled)
+  - `sensor.sec_automation_status` - Overall automation status
+- Battery-aware automation logic
+  - Lower solar threshold when battery near full (80%+)
+  - More aggressive cost control when battery available (50%+)
+  - Prioritizes device usage over battery charging when battery full
+- 6 new tests for battery functionality (total: 35 tests)
+
+### Changed
+- Dashboard now shows battery status when enabled
+- Automation considers battery state in decision making
+- System sensors automatically published every 30 seconds
+
+### Configuration
+- Added `battery_level_sensor` - Sensor reporting battery percentage
+- Added `battery_power_sensor` - Sensor reporting battery power flow
+- Added `battery_capacity_kwh` - Battery capacity in kWh
+- Added `enable_battery_management` - Enable/disable battery features
+
+### Notes
+- Direct control is already per-device (no changes needed)
+- Configuration is managed through Home Assistant addon UI (config.json)
+- All battery features are optional and disabled by default
+
 ## [1.1.0] - 2024-11-04
 
 ### Added

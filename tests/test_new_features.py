@@ -280,6 +280,89 @@ class TestEnergyManagerNewFeatures(unittest.TestCase):
         
         slots = self.manager.calculate_optimal_solar_slots(forecast_data, 0)
         self.assertEqual(slots, [])
+    
+    def test_battery_level_retrieval(self):
+        """Test getting battery level."""
+        # Enable battery management
+        self.manager.config['enable_battery_management'] = True
+        self.manager.config['battery_level_sensor'] = 'sensor.battery_level'
+        
+        self.mock_ha_client.get_sensor_value = Mock(return_value=75.0)
+        level = self.manager.get_battery_level()
+        
+        self.assertEqual(level, 75.0)
+        self.mock_ha_client.get_sensor_value.assert_called_with('sensor.battery_level')
+    
+    def test_battery_level_disabled(self):
+        """Test battery level returns None when disabled."""
+        self.manager.config['enable_battery_management'] = False
+        level = self.manager.get_battery_level()
+        self.assertIsNone(level)
+    
+    def test_battery_power_retrieval(self):
+        """Test getting battery power."""
+        self.manager.config['enable_battery_management'] = True
+        self.manager.config['battery_power_sensor'] = 'sensor.battery_power'
+        
+        self.mock_ha_client.get_sensor_value = Mock(return_value=500.0)  # Charging
+        power = self.manager.get_battery_power()
+        
+        self.assertEqual(power, 500.0)
+    
+    def test_status_includes_battery_when_enabled(self):
+        """Test status includes battery info when enabled."""
+        self.manager.config['enable_battery_management'] = True
+        self.manager.config['battery_level_sensor'] = 'sensor.battery_level'
+        self.manager.config['battery_power_sensor'] = 'sensor.battery_power'
+        
+        self.mock_ha_client.get_sensor_value = Mock(side_effect=[0.0, 0.0, 0.0, 80.0, 300.0])
+        
+        status = self.manager.get_status()
+        
+        self.assertIn('battery_level', status)
+        self.assertIn('battery_power', status)
+        self.assertIn('battery_state', status)
+        self.assertEqual(status['battery_level'], 80.0)
+        self.assertEqual(status['battery_power'], 300.0)
+        self.assertEqual(status['battery_state'], 'charging')
+    
+    def test_battery_state_determination(self):
+        """Test battery state is correctly determined."""
+        self.manager.config['enable_battery_management'] = True
+        self.manager.config['battery_level_sensor'] = 'sensor.battery_level'
+        self.manager.config['battery_power_sensor'] = 'sensor.battery_power'
+        
+        # Test charging state
+        self.mock_ha_client.get_sensor_value = Mock(side_effect=[0.0, 0.0, 0.0, 50.0, 500.0])
+        status = self.manager.get_status()
+        self.assertEqual(status['battery_state'], 'charging')
+        
+        # Test discharging state
+        self.mock_ha_client.get_sensor_value = Mock(side_effect=[0.0, 0.0, 0.0, 50.0, -300.0])
+        status = self.manager.get_status()
+        self.assertEqual(status['battery_state'], 'discharging')
+        
+        # Test idle state
+        self.mock_ha_client.get_sensor_value = Mock(side_effect=[0.0, 0.0, 0.0, 50.0, 0.0])
+        status = self.manager.get_status()
+        self.assertEqual(status['battery_state'], 'idle')
+    
+    def test_publish_system_sensors(self):
+        """Test publishing system-wide sensors to HA."""
+        self.mock_ha_client.get_sensor_value = Mock(side_effect=[1000.0, 0.25, 0.05])
+        self.mock_ha_client.set_state = Mock(return_value=True)
+        
+        self.manager.publish_system_sensors()
+        
+        # Should have called set_state for multiple sensors
+        self.assertGreater(self.mock_ha_client.set_state.call_count, 0)
+        
+        # Check that solar generation sensor was published
+        calls = self.mock_ha_client.set_state.call_args_list
+        sensor_ids = [call[0][0] for call in calls]
+        self.assertIn('sensor.sec_solar_generation', sensor_ids)
+        self.assertIn('sensor.sec_electricity_cost', sensor_ids)
+        self.assertIn('sensor.sec_automation_status', sensor_ids)
 
 
 if __name__ == '__main__':
