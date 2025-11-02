@@ -105,3 +105,18 @@ class HomeAssistantClient:
                 logger.warning(f"Could not convert sensor value to float: {entity_id}")
                 return 0.0
         return 0.0
+    
+    def set_state(self, entity_id, state_data):
+        """Set state of an entity (for publishing sensors)."""
+        try:
+            response = requests.post(
+                f"{self.base_url}/states/{entity_id}",
+                headers=self.headers,
+                json=state_data,
+                timeout=10
+            )
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            logger.error(f"Error setting state for {entity_id}: {e}")
+            return False

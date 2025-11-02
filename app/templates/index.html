@@ -16,6 +16,7 @@
         <div class="tabs">
             <button class="tab-button active" onclick="showTab('dashboard')">Dashboard</button>
             <button class="tab-button" onclick="showTab('devices')">Devices</button>
+            <button class="tab-button" onclick="showTab('scheduling')">Scheduling</button>
             <button class="tab-button" onclick="showTab('heating')">Heating Comparison</button>
             <button class="tab-button" onclick="showTab('automation')">Automation</button>
         </div>
@@ -76,6 +77,43 @@
                 <button onclick="loadAvailableDevices()" class="btn btn-secondary">Refresh Device List</button>
                 <div id="available-devices-list" class="device-list">
                     <p class="info">Click "Refresh Device List" to see available devices</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduling Tab -->
+        <div id="scheduling" class="tab-content">
+            <h2>Smart Scheduling & Forecasts</h2>
+            
+            <div class="section">
+                <h3>Solar Forecast Optimization</h3>
+                <div class="info-text">
+                    <p>View optimal time slots based on solar generation forecasts.</p>
+                </div>
+                <button onclick="loadSolarForecast()" class="btn btn-primary">Load Solar Forecast</button>
+                <div id="solar-forecast-list" class="forecast-list">
+                    <p class="info">Click "Load Solar Forecast" to see optimal slots</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Cost Forecast Optimization</h3>
+                <div class="info-text">
+                    <p>View cheapest time slots based on energy cost forecasts.</p>
+                </div>
+                <button onclick="loadCostForecast()" class="btn btn-primary">Load Cost Forecast</button>
+                <div id="cost-forecast-list" class="forecast-list">
+                    <p class="info">Click "Load Cost Forecast" to see cheapest slots</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Device Schedule Configuration</h3>
+                <div class="info-text">
+                    <p>Configure when devices should not be controlled automatically.</p>
+                </div>
+                <div id="device-schedules">
+                    <p class="info">Select a managed device from the Devices tab to configure its schedule</p>
                 </div>
             </div>
         </div>

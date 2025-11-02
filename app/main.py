@@ -141,6 +141,74 @@ def get_config():
         return jsonify({'success': False, 'error': 'Failed to retrieve configuration'}), 500
 
 
+@app.route('/api/devices/schedule/<entity_id>')
+def get_device_schedule(entity_id):
+    """Get optimal schedule for a device based on forecasts."""
+    try:
+        schedule = energy_manager.get_device_optimal_schedule(entity_id)
+        if schedule:
+            return jsonify({'success': True, 'schedule': schedule})
+        else:
+            return jsonify({'success': False, 'error': 'Device not found or no schedule available'}), 404
+    except Exception as e:
+        logger.error(f"Error getting device schedule: {e}")
+        return jsonify({'success': False, 'error': 'Failed to calculate schedule'}), 500
+
+
+@app.route('/api/devices/managed/<entity_id>', methods=['PUT'])
+def update_managed_device(entity_id):
+    """Update a managed device configuration."""
+    try:
+        data = request.json
+        device_info = energy_manager.managed_devices.get(entity_id)
+        if not device_info:
+            return jsonify({'success': False, 'error': 'Device not found'}), 404
+        
+        # Update device settings
+        if 'priority' in data:
+            device_info['priority'] = data['priority']
+        if 'power_consumption' in data:
+            device_info['power_consumption'] = data['power_consumption']
+        if 'schedule' in data:
+            device_info['schedule'] = data['schedule']
+        if 'allow_direct_control' in data:
+            device_info['allow_direct_control'] = data['allow_direct_control']
+        if 'auto_start_automation' in data:
+            device_info['auto_start_automation'] = data['auto_start_automation']
+        if 'required_run_duration' in data:
+            device_info['required_run_duration'] = data['required_run_duration']
+        
+        energy_manager.save_managed_devices()
+        energy_manager._publish_device_entity(entity_id)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Error updating device: {e}")
+        return jsonify({'success': False, 'error': 'Failed to update device'}), 500
+
+
+@app.route('/api/forecast/solar')
+def get_solar_forecast():
+    """Get solar generation forecast."""
+    try:
+        forecast = energy_manager.get_solar_forecast()
+        return jsonify({'success': True, 'forecast': forecast})
+    except Exception as e:
+        logger.error(f"Error getting solar forecast: {e}")
+        return jsonify({'success': False, 'error': 'Failed to retrieve solar forecast'}), 500
+
+
+@app.route('/api/forecast/cost')
+def get_cost_forecast():
+    """Get energy cost forecast."""
+    try:
+        forecast = energy_manager.get_cost_forecast()
+        return jsonify({'success': True, 'forecast': forecast})
+    except Exception as e:
+        logger.error(f"Error getting cost forecast: {e}")
+        return jsonify({'success': False, 'error': 'Failed to retrieve cost forecast'}), 500
+
+
 def automation_loop_sync():
     """Main automation loop (synchronous wrapper)."""
     loop = asyncio.new_event_loop()

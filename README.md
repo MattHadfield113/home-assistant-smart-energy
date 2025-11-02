@@ -18,6 +18,19 @@ The Smart Energy Controller is a comprehensive Home Assistant add-on that provid
 - 🔥 **Heating Comparison**: Compare heat pump vs. gas heating costs with COP/EER calculations
 - 📊 **Web Dashboard**: Beautiful, responsive interface for monitoring and control
 - 🤖 **Intelligent Automation**: Priority-based device control system
+- 📅 **Smart Scheduling**: Device schedules with time windows and day restrictions
+- 🔮 **Forecast Optimization**: Solar and cost forecast integration for optimal timing
+- 🏡 **HA Integration**: Publishes automation decisions as Home Assistant entities
+- ⚡ **Auto-Start Triggers**: Launch automations/scripts on favorable conditions
+
+## What's New in v1.1.0
+
+- **Heating Control**: Configurable minimum time between heating system changes
+- **Device Scheduling**: Set time windows when devices should not be controlled
+- **Forecast Integration**: Solar and cost forecast optimization for smart scheduling
+- **Auto-Start Actions**: Trigger HA automations when conditions are favorable
+- **Enhanced Control**: Per-device settings for direct control and run duration
+- **HA Entity Publishing**: View automation decisions directly in Home Assistant
 
 ## Quick Start
 

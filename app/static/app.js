@@ -44,6 +44,8 @@ function showTab(tabName) {
         loadDashboard();
     } else if (tabName === 'devices') {
         loadManagedDevices();
+    } else if (tabName === 'scheduling') {
+        // Scheduling tab - data loaded on demand via buttons
     } else if (tabName === 'heating') {
         loadHeatingComparison();
     } else if (tabName === 'automation') {
@@ -214,6 +216,176 @@ function updateAutomationButton(enabled) {
     } else {
         button.classList.remove('active');
         status.textContent = '✗ Disabled';
+    }
+}
+
+// Scheduling and forecast functions
+async function loadSolarForecast() {
+    const result = await apiCall('/api/forecast/solar');
+    const container = document.getElementById('solar-forecast-list');
+    
+    if (result.success && result.forecast && result.forecast.length > 0) {
+        container.innerHTML = '<h4>Solar Generation Forecast</h4>';
+        result.forecast.slice(0, 24).forEach(item => {
+            const time = new Date(item.timestamp).toLocaleString();
+            container.innerHTML += `
+                <div class="forecast-item">
+                    <span class="forecast-time">${time}</span>
+                    <span class="forecast-value">${item.power}W</span>
+                </div>
+            `;
+        });
+    } else {
+        container.innerHTML = '<p class="info">No solar forecast data available. Configure solar_forecast_sensor in settings.</p>';
+    }
+}
+
+async function loadCostForecast() {
+    const result = await apiCall('/api/forecast/cost');
+    const container = document.getElementById('cost-forecast-list');
+    
+    if (result.success && result.forecast && result.forecast.length > 0) {
+        container.innerHTML = '<h4>Energy Cost Forecast</h4>';
+        result.forecast.slice(0, 24).forEach(item => {
+            const time = new Date(item.timestamp).toLocaleString();
+            const costClass = item.cost_per_kwh < 0.15 ? 'cost-low' : item.cost_per_kwh > 0.30 ? 'cost-high' : 'cost-medium';
+            container.innerHTML += `
+                <div class="forecast-item ${costClass}">
+                    <span class="forecast-time">${time}</span>
+                    <span class="forecast-value">${item.cost_per_kwh.toFixed(4)}/kWh</span>
+                </div>
+            `;
+        });
+    } else {
+        container.innerHTML = '<p class="info">No cost forecast data available. Configure electricity_forecast_sensor in settings.</p>';
+    }
+}
+
+async function showDeviceScheduleDialog(entityId, deviceName) {
+    const scheduleHTML = `
+        <div class="modal">
+            <div class="modal-content">
+                <h3>Configure Schedule for ${deviceName}</h3>
+                <form id="schedule-form">
+                    <div class="form-group">
+                        <label>Start Time:</label>
+                        <input type="time" id="schedule-start" value="08:00">
+                    </div>
+                    <div class="form-group">
+                        <label>End Time:</label>
+                        <input type="time" id="schedule-end" value="22:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Active Days:</label>
+                        <div class="day-selector">
+                            <label><input type="checkbox" value="0" checked> Mon</label>
+                            <label><input type="checkbox" value="1" checked> Tue</label>
+                            <label><input type="checkbox" value="2" checked> Wed</label>
+                            <label><input type="checkbox" value="3" checked> Thu</label>
+                            <label><input type="checkbox" value="4" checked> Fri</label>
+                            <label><input type="checkbox" value="5"> Sat</label>
+                            <label><input type="checkbox" value="6"> Sun</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="allow-control" checked> Allow automatic control</label>
+                    </div>
+                    <div class="form-group">
+                        <label>Required Run Duration (minutes):</label>
+                        <input type="number" id="run-duration" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Auto-start Automation/Script:</label>
+                        <input type="text" id="auto-start" placeholder="automation.start_device or script.device_start">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="saveDeviceSchedule('${entityId}')">Save</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', scheduleHTML);
+}
+
+async function saveDeviceSchedule(entityId) {
+    const start = document.getElementById('schedule-start').value;
+    const end = document.getElementById('schedule-end').value;
+    const days = Array.from(document.querySelectorAll('.day-selector input:checked')).map(cb => parseInt(cb.value));
+    const allowControl = document.getElementById('allow-control').checked;
+    const runDuration = parseInt(document.getElementById('run-duration').value);
+    const autoStart = document.getElementById('auto-start').value;
+    
+    const data = {
+        schedule: { start, end, days },
+        allow_direct_control: allowControl,
+        required_run_duration: runDuration,
+        auto_start_automation: autoStart || null
+    };
+    
+    const result = await apiCall(`/api/devices/managed/${entityId}`, 'PUT', data);
+    
+    if (result.success) {
+        alert('Schedule saved successfully!');
+        closeModal();
+        loadManagedDevices();
+    } else {
+        alert('Error saving schedule: ' + result.error);
+    }
+}
+
+function closeModal() {
+    const modal = document.querySelector('.modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function getDeviceOptimalSchedule(entityId, deviceName) {
+    const result = await apiCall(`/api/devices/schedule/${entityId}`);
+    
+    if (result.success && result.schedule) {
+        const schedule = result.schedule;
+        let html = `<div class="optimal-schedule"><h4>Optimal Schedule for ${deviceName}</h4>`;
+        
+        if (schedule.optimal_solar_slots && schedule.optimal_solar_slots.length > 0) {
+            html += '<h5>Best Solar Generation Slots:</h5><div class="slot-list">';
+            schedule.optimal_solar_slots.slice(0, 5).forEach(slot => {
+                const time = new Date(slot.start_time).toLocaleString();
+                html += `
+                    <div class="slot-item">
+                        <span>${time}</span>
+                        <span>${slot.duration_minutes} min</span>
+                        <span>Avg: ${slot.avg_solar_power.toFixed(0)}W</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+        
+        if (schedule.cheapest_cost_slots && schedule.cheapest_cost_slots.length > 0) {
+            html += '<h5>Cheapest Cost Slots:</h5><div class="slot-list">';
+            schedule.cheapest_cost_slots.slice(0, 5).forEach(slot => {
+                const time = new Date(slot.start_time).toLocaleString();
+                html += `
+                    <div class="slot-item">
+                        <span>${time}</span>
+                        <span>${slot.duration_minutes} min</span>
+                        <span>Avg: ${slot.avg_cost_per_kwh.toFixed(4)}/kWh</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        
+        // Display in a modal or alert
+        alert(html.replace(/<[^>]*>/g, '\n'));
+    } else {
+        alert('No optimal schedule available for this device');
     }
 }
 
