@@ -43,7 +43,7 @@ jobs:
 
       - name: Check config.json version matches
         run: |
-          CONFIG_VERSION=$(python -c "import json; print(json.load(open('config.json'))['version'])")
+          CONFIG_VERSION=$(python -c "import json; print(json.load(open('smart_energy_controller/config.json'))['version'])")
           TAG_VERSION="${{ steps.get-version.outputs.version }}"
           TAG_VERSION="${TAG_VERSION#v}"
           
@@ -71,7 +71,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r smart_energy_controller/requirements.txt
           pip install pytest pytest-cov
 
       - name: Run tests
@@ -109,8 +109,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./smart_energy_controller
+          file: ./smart_energy_controller/Dockerfile
           platforms: linux/${{ matrix.arch }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
@@ -170,7 +170,7 @@ jobs:
           VERSION_NO_V="${VERSION#v}"
           
           # Extract changelog section for this version
-          CHANGELOG=$(sed -n "/## \[${VERSION_NO_V}\]/,/## \[/p" CHANGELOG.md | sed '$d')
+          CHANGELOG=$(sed -n "/## \[${VERSION_NO_V}\]/,/## \[/p" smart_energy_controller/CHANGELOG.md | sed '$d')
           
           if [ -z "$CHANGELOG" ]; then
             echo "No changelog found for version $VERSION_NO_V"

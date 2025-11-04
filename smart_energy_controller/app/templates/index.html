@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy Controller</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Smart Energy Controller</h1>
+            <p class="subtitle">Intelligent energy management for your home</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('dashboard')">Dashboard</button>
+            <button class="tab-button" onclick="showTab('devices')">Devices</button>
+            <button class="tab-button" onclick="showTab('scheduling')">Scheduling</button>
+            <button class="tab-button" onclick="showTab('heating')">Heating Comparison</button>
+            <button class="tab-button" onclick="showTab('automation')">Automation</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Energy Status</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-icon">☀️</div>
+                    <div class="status-label">Solar Generation</div>
+                    <div class="status-value" id="solar-generation">--</div>
+                    <div class="status-unit">W</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">💰</div>
+                    <div class="status-label">Electricity Cost</div>
+                    <div class="status-value" id="electricity-cost">--</div>
+                    <div class="status-unit">per kWh</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">🔥</div>
+                    <div class="status-label">Gas Cost</div>
+                    <div class="status-value" id="gas-cost">--</div>
+                    <div class="status-unit">per kWh</div>
+                </div>
+                <div class="status-card" id="battery-card" style="display: none;">
+                    <div class="status-icon">🔋</div>
+                    <div class="status-label">Battery Level</div>
+                    <div class="status-value" id="battery-level">--</div>
+                    <div class="status-unit" id="battery-state">%</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">🎁</div>
+                    <div class="status-label">Free Session</div>
+                    <div class="status-value" id="free-session">--</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">💾</div>
+                    <div class="status-label">Saving Session</div>
+                    <div class="status-value" id="saving-session">--</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">🔌</div>
+                    <div class="status-label">Managed Devices</div>
+                    <div class="status-value" id="managed-count">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Devices Tab -->
+        <div id="devices" class="tab-content">
+            <h2>Device Management</h2>
+            
+            <div class="section">
+                <h3>Managed Devices</h3>
+                <div id="managed-devices-list" class="device-list">
+                    <p class="loading">Loading devices...</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Available Devices</h3>
+                <button onclick="loadAvailableDevices()" class="btn btn-secondary">Refresh Device List</button>
+                <div id="available-devices-list" class="device-list">
+                    <p class="info">Click "Refresh Device List" to see available devices</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduling Tab -->
+        <div id="scheduling" class="tab-content">
+            <h2>Smart Scheduling & Forecasts</h2>
+            
+            <div class="section">
+                <h3>Solar Forecast Optimization</h3>
+                <div class="info-text">
+                    <p>View optimal time slots based on solar generation forecasts.</p>
+                </div>
+                <button onclick="loadSolarForecast()" class="btn btn-primary">Load Solar Forecast</button>
+                <div id="solar-forecast-list" class="forecast-list">
+                    <p class="info">Click "Load Solar Forecast" to see optimal slots</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Cost Forecast Optimization</h3>
+                <div class="info-text">
+                    <p>View cheapest time slots based on energy cost forecasts.</p>
+                </div>
+                <button onclick="loadCostForecast()" class="btn btn-primary">Load Cost Forecast</button>
+                <div id="cost-forecast-list" class="forecast-list">
+                    <p class="info">Click "Load Cost Forecast" to see cheapest slots</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Device Schedule Configuration</h3>
+                <div class="info-text">
+                    <p>Configure when devices should not be controlled automatically.</p>
+                </div>
+                <div id="device-schedules">
+                    <p class="info">Select a managed device from the Devices tab to configure its schedule</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heating Comparison Tab -->
+        <div id="heating" class="tab-content">
+            <h2>Heating System Comparison</h2>
+            <div class="comparison-container">
+                <div class="comparison-card">
+                    <h3>⚡ Heat Pump</h3>
+                    <div class="comparison-detail">
+                        <span>Cost per kWh:</span>
+                        <span id="heat-pump-cost">--</span>
+                    </div>
+                    <div class="comparison-detail">
+                        <span>COP:</span>
+                        <span id="heat-pump-cop">--</span>
+                    </div>
+                </div>
+                <div class="comparison-card">
+                    <h3>🔥 Gas Heating</h3>
+                    <div class="comparison-detail">
+                        <span>Cost per kWh:</span>
+                        <span id="gas-heating-cost">--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="recommendation" id="heating-recommendation">
+                <strong>Loading comparison...</strong>
+            </div>
+        </div>
+
+        <!-- Automation Tab -->
+        <div id="automation" class="tab-content">
+            <h2>Automation Settings</h2>
+            <div class="automation-control">
+                <div class="toggle-container">
+                    <label class="toggle-label">
+                        <span>Automation Status:</span>
+                        <button id="automation-toggle" class="btn" onclick="toggleAutomation()">
+                            <span id="automation-status">Loading...</span>
+                        </button>
+                    </label>
+                </div>
+                <p class="info-text">
+                    When enabled, the system will automatically control managed devices based on:
+                </p>
+                <ul class="info-list">
+                    <li>Solar generation levels</li>
+                    <li>Current electricity costs</li>
+                    <li>Free electric sessions</li>
+                    <li>Saving sessions (turning off devices)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
