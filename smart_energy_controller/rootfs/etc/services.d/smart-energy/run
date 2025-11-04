@@ -1,5 +1,9 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start Smart Energy Controller
+# ==============================================================================
+
+bashio::log.info "Starting Smart Energy Controller..."
 
 CONFIG_PATH=/data/options.json
 
@@ -8,7 +12,7 @@ mkdir -p /data
 
 # Create default config if none exists
 if [ ! -f "$CONFIG_PATH" ]; then
-    echo "Creating default configuration..."
+    bashio::log.info "Creating default configuration..."
     cat > "$CONFIG_PATH" << EOF
 {
   "solar_sensor": "",
@@ -23,6 +27,6 @@ if [ ! -f "$CONFIG_PATH" ]; then
 EOF
 fi
 
-echo "Starting Smart Energy Controller..."
-cd /app
+cd /app || bashio::exit.nok "Could not change to /app directory"
+
 exec python3 main.py

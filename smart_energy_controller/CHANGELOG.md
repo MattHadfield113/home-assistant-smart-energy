@@ -35,6 +35,12 @@ All notable changes to the Smart Energy Controller add-on will be documented in 
 - Added `battery_capacity_kwh` - Battery capacity in kWh
 - Added `enable_battery_management` - Enable/disable battery features
 
+### Fixed
+- Fixed s6-overlay startup issue causing "can only run as pid 1" error
+  - Implemented proper s6-overlay service structure for Home Assistant base images
+  - Migrated from direct script execution to s6 service management
+  - Added proper bashio logging integration
+
 ### Notes
 - Direct control is already per-device (no changes needed)
 - Configuration is managed through Home Assistant addon UI (config.json)
