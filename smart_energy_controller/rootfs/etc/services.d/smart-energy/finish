@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Finish script for Smart Energy Controller
+# ==============================================================================
+
+bashio::log.info "Smart Energy Controller stopped."

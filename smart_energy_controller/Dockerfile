@@ -14,10 +14,6 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 COPY app /app
-COPY run.sh /
-RUN chmod a+x /run.sh
+COPY rootfs /
 
 WORKDIR /app
-
-# Start the application
-CMD ["/run.sh"]
