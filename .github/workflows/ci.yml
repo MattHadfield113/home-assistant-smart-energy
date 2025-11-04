@@ -104,16 +104,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate repository.json syntax
+        run: |
+          python -m json.tool repository.json > /dev/null
+          echo "✓ repository.json is valid JSON"
+
       - name: Validate config.json syntax
         run: |
-          python -m json.tool config.json > /dev/null
+          python -m json.tool smart_energy_controller/config.json > /dev/null
           echo "✓ config.json is valid JSON"
 
       - name: Check config.json schema
         run: |
           python -c "
           import json
-          with open('config.json') as f:
+          with open('smart_energy_controller/config.json') as f:
               config = json.load(f)
           required_keys = ['name', 'version', 'slug', 'description', 'arch']
           for key in required_keys:
@@ -123,7 +128,7 @@ jobs:
 
       - name: Validate Dockerfile syntax
         run: |
-          docker run --rm -i hadolint/hadolint < Dockerfile
+          docker run --rm -i hadolint/hadolint < smart_energy_controller/Dockerfile
         continue-on-error: true
 
   security-scan:
@@ -174,8 +179,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./smart_energy_controller
+          file: ./smart_energy_controller/Dockerfile
           push: false
           tags: smart-energy-controller:test
           cache-from: type=gha
@@ -191,7 +196,7 @@ jobs:
       - name: Run Home Assistant Add-on Lint
         uses: frenck/action-addon-linter@v2
         with:
-          path: "."
+          path: "./smart_energy_controller"
 
   documentation-check:
     name: Check Documentation
@@ -202,7 +207,7 @@ jobs:
 
       - name: Check for required documentation files
         run: |
-          required_files=("README.md" "CHANGELOG.md" "DOCS.md")
+          required_files=("README.md" "smart_energy_controller/CHANGELOG.md" "smart_energy_controller/DOCS.md")
           for file in "${required_files[@]}"; do
             if [ ! -f "$file" ]; then
               echo "❌ Missing required file: $file"
