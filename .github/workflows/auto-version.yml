@@ -1,0 +1,82 @@
+name: Auto Version and Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/**'
+      - 'tests/**'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  auto-version:
+    name: Auto Version and Tag
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip-version]')"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(python -c "import json; print(json.load(open('smart_energy_controller/config.json'))['version'])")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Increment patch version
+        id: new-version
+        run: |
+          CURRENT="${{ steps.current-version.outputs.version }}"
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update config.json
+        run: |
+          python -c "
+          import json
+          with open('smart_energy_controller/config.json', 'r') as f:
+              config = json.load(f)
+          config['version'] = '${{ steps.new-version.outputs.version }}'
+          with open('smart_energy_controller/config.json', 'w') as f:
+              json.dump(config, f, indent=2)
+              f.write('\n')
+          print('Updated config.json to version ${{ steps.new-version.outputs.version }}')
+          "
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add smart_energy_controller/config.json
+          git commit -m "chore: bump version to ${{ steps.new-version.outputs.version }} [skip-version]"
+          git push
+
+      - name: Create and push tag
+        run: |
+          git tag -a "v${{ steps.new-version.outputs.version }}" -m "Release v${{ steps.new-version.outputs.version }}"
+          git push origin "v${{ steps.new-version.outputs.version }}"
+
+      - name: Trigger release workflow
+        run: |
+          echo "Version v${{ steps.new-version.outputs.version }} tagged and pushed"
+          echo "Release workflow will be triggered automatically"

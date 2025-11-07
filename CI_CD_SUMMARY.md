@@ -92,7 +92,7 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 
 3. **build-and-push** (Matrix: 5 architectures)
    - amd64, armv7, aarch64, armhf, i386
-   - Docker Hub push
+   - GitHub Container Registry (GHCR) push
 
 4. **create-manifest**
    - Multi-arch manifest
@@ -264,8 +264,7 @@ Update:
 
 ### Repository Secrets
 For releases to work:
-- `DOCKER_USERNAME` - Docker Hub username
-- `DOCKER_PASSWORD` - Docker Hub token
+- No additional secrets needed! GHCR uses the built-in `GITHUB_TOKEN`
 
 Optional:
 - `CODECOV_TOKEN` - For coverage reporting
@@ -287,10 +286,11 @@ Enable:
 ## Integration Points
 
 ### External Services
-1. **Docker Hub**
+1. **GitHub Container Registry (GHCR)**
    - Image hosting
    - Multi-arch manifests
    - Automated pushes
+   - Built-in authentication
 
 2. **Codecov** (optional)
    - Coverage tracking

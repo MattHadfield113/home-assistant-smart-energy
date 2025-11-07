@@ -71,7 +71,7 @@ This directory contains automated workflows for continuous integration, testing,
 
 3. **build-and-push** - Multi-arch builds
    - Builds for: amd64, armv7, aarch64, armhf, i386
-   - Pushes to Docker Hub
+   - Pushes to GitHub Container Registry (GHCR)
    - Tags with version and latest
 
 4. **create-manifest** - Docker manifests
@@ -152,9 +152,8 @@ Standard PR template requiring:
 
 For full CI/CD functionality, configure these secrets in GitHub repository settings:
 
-### Docker Hub (for releases)
-- `DOCKER_USERNAME` - Docker Hub username
-- `DOCKER_PASSWORD` - Docker Hub password or token
+### GitHub Container Registry (for releases)
+No additional secrets needed! GHCR uses the built-in `GITHUB_TOKEN` for authentication.
 
 ### Optional
 - `CODECOV_TOKEN` - Codecov upload token (for coverage reporting)
@@ -272,7 +271,7 @@ pytest tests/ -v --cov=app
 - Format: `v1.2.3` for tag, `1.2.3` in config
 
 **Docker Push Failures:**
-- Verify Docker Hub credentials
+- Verify GHCR permissions (packages: write)
 - Check image size limits
 - Ensure network connectivity
 
@@ -303,7 +302,7 @@ When modifying workflows:
 
 - [GitHub Actions Docs](https://docs.github.com/en/actions)
 - [Home Assistant Add-on Development](https://developers.home-assistant.io/docs/add-ons)
-- [Docker Hub](https://hub.docker.com/)
+- [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 - [Codecov](https://codecov.io/)
 - [Pre-commit](https://pre-commit.com/)
 
