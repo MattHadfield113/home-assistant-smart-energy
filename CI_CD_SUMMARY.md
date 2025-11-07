@@ -6,9 +6,10 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 
 ## Files Created
 
-### GitHub Workflows (2)
+### GitHub Workflows (3)
 1. `.github/workflows/ci.yml` - Continuous Integration (10 jobs)
 2. `.github/workflows/release.yml` - Automated releases (6 jobs)
+3. `.github/workflows/auto-version.yml` - Automatic versioning on merge to main
 
 ### Configuration Files (4)
 1. `.flake8` - Flake8 linting configuration
@@ -31,7 +32,7 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 ### Dependencies (1)
 1. `requirements-dev.txt` - Development dependencies
 
-**Total: 13 new files**
+**Total: 14 new files**
 
 ## CI Workflow Details
 
@@ -118,6 +119,11 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 ### Release Workflow
 - Git tags: `v*.*.*`
 - Manual workflow_dispatch with version input
+
+### Auto Version Workflow
+- Push to `main` branch
+- Automatically increments version and creates release
+- Can be skipped with `[skip-version]` in commit message
 
 ## Quality Gates
 

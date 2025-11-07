@@ -54,6 +54,25 @@ This directory contains automated workflows for continuous integration, testing,
     - Aggregates all job results
     - Fails if critical checks fail
 
+### Auto Version Workflow (`auto-version.yml`)
+
+**Triggers:**
+- Push to `main` branch
+- Ignores markdown files, workflow changes, and test files
+- Can be skipped by including `[skip-version]` in commit message
+
+**Jobs:**
+
+1. **auto-version** - Automatic version management
+   - Reads current version from config.json
+   - Increments patch version automatically
+   - Updates config.json with new version
+   - Commits the version bump
+   - Creates and pushes git tag
+   - Triggers release workflow automatically
+
+**Note:** This workflow enables automatic versioning and releases whenever code is merged to main, eliminating the need for manual version management.
+
 ### Release Workflow (`release.yml`)
 
 **Triggers:**
@@ -233,10 +252,16 @@ pytest tests/ -v --cov=app
    - Verify documentation
 
 2. **Creating Releases**
-   - Update CHANGELOG.md
-   - Bump version in config.json
-   - Create git tag: `git tag v1.2.0`
-   - Push tag: `git push origin v1.2.0`
+   - Releases are now automated when merging to main
+   - The auto-version workflow automatically:
+     - Increments the patch version in config.json
+     - Creates a git tag
+     - Triggers the release workflow
+   - To skip auto-versioning, include `[skip-version]` in commit message
+   - For manual releases:
+     - Update CHANGELOG.md
+     - Create git tag: `git tag v1.2.0`
+     - Push tag: `git push origin v1.2.0`
 
 3. **Monitoring**
    - Check workflow runs regularly
