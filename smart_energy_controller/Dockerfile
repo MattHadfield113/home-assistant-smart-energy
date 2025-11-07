@@ -17,3 +17,6 @@ COPY app /app
 COPY rootfs /
 
 WORKDIR /app
+
+# Start s6-overlay init system
+CMD ["/init"]
