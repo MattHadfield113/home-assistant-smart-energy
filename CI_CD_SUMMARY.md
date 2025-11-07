@@ -6,9 +6,10 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 
 ## Files Created
 
-### GitHub Workflows (2)
+### GitHub Workflows (3)
 1. `.github/workflows/ci.yml` - Continuous Integration (10 jobs)
 2. `.github/workflows/release.yml` - Automated releases (6 jobs)
+3. `.github/workflows/auto-version.yml` - Automatic versioning on merge to main
 
 ### Configuration Files (4)
 1. `.flake8` - Flake8 linting configuration
@@ -31,7 +32,7 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 ### Dependencies (1)
 1. `requirements-dev.txt` - Development dependencies
 
-**Total: 13 new files**
+**Total: 14 new files**
 
 ## CI Workflow Details
 
@@ -92,7 +93,7 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 
 3. **build-and-push** (Matrix: 5 architectures)
    - amd64, armv7, aarch64, armhf, i386
-   - Docker Hub push
+   - GitHub Container Registry (GHCR) push
 
 4. **create-manifest**
    - Multi-arch manifest
@@ -118,6 +119,11 @@ Comprehensive GitHub Actions CI/CD pipeline implemented following Home Assistant
 ### Release Workflow
 - Git tags: `v*.*.*`
 - Manual workflow_dispatch with version input
+
+### Auto Version Workflow
+- Push to `main` branch
+- Automatically increments version and creates release
+- Can be skipped with `[skip-version]` in commit message
 
 ## Quality Gates
 
@@ -264,8 +270,7 @@ Update:
 
 ### Repository Secrets
 For releases to work:
-- `DOCKER_USERNAME` - Docker Hub username
-- `DOCKER_PASSWORD` - Docker Hub token
+- No additional secrets needed! GHCR uses the built-in `GITHUB_TOKEN`
 
 Optional:
 - `CODECOV_TOKEN` - For coverage reporting
@@ -287,10 +292,11 @@ Enable:
 ## Integration Points
 
 ### External Services
-1. **Docker Hub**
+1. **GitHub Container Registry (GHCR)**
    - Image hosting
    - Multi-arch manifests
    - Automated pushes
+   - Built-in authentication
 
 2. **Codecov** (optional)
    - Coverage tracking
